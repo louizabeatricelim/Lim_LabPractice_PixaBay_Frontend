@@ -103,36 +103,86 @@
     return "";
   }
 
+  function photoSrc(hit) {
+    return hit.webformatURL || hit.largeImageURL || hit.previewURL || "";
+  }
+
+  function videoPoster(hit) {
+    const videos = hit.videos || {};
+    const sizes = [videos.large, videos.medium, videos.small, videos.tiny];
+    for (let i = 0; i < sizes.length; i += 1) {
+      if (sizes[i] && sizes[i].thumbnail) {
+        return sizes[i].thumbnail;
+      }
+    }
+    return hit.userImageURL || "";
+  }
+
+  function isPhotoHit(hit, kind) {
+    if (photoSrc(hit) && !videoSrc(hit)) {
+      return true;
+    }
+    if (kind === "photo" && photoSrc(hit)) {
+      return true;
+    }
+    return false;
+  }
+
+  function appendPhoto(card, hit) {
+    const frame = document.createElement("div");
+    frame.className = "photo-frame";
+
+    const img = document.createElement("img");
+    img.src = photoSrc(hit);
+    img.alt = hit.tags || "Pixabay photo";
+    img.loading = "lazy";
+    img.decoding = "async";
+    const width = hit.webformatWidth || hit.imageWidth;
+    const height = hit.webformatHeight || hit.imageHeight;
+    if (width && height) {
+      img.style.aspectRatio = width + " / " + height;
+    }
+    frame.appendChild(img);
+
+    const badge = document.createElement("span");
+    badge.className = "media-badge";
+    badge.textContent = "Photo";
+    frame.appendChild(badge);
+
+    card.appendChild(frame);
+  }
+
+  function appendVideo(card, hit) {
+    const src = videoSrc(hit);
+    if (!src) {
+      return false;
+    }
+    const video = document.createElement("video");
+    video.controls = true;
+    video.preload = "metadata";
+    video.src = src;
+    video.setAttribute("playsinline", "");
+    const poster = videoPoster(hit);
+    if (poster) {
+      video.poster = poster;
+    }
+    card.appendChild(video);
+    return true;
+  }
+
   function renderResults(hits, kind) {
     resultsEl.innerHTML = "";
-    resultsEl.dataset.kind = kind;
+    resultsEl.dataset.kind = kind === "video" ? "video" : "photo";
 
     hits.forEach(function (hit) {
+      const asPhoto = isPhotoHit(hit, kind);
       const card = document.createElement("article");
-      card.className = "result-card is-" + (kind === "video" ? "video" : "photo");
+      card.className = "result-card is-" + (asPhoto ? "photo" : "video");
 
-      if (kind === "video") {
-        const src = videoSrc(hit);
-        if (!src) {
-          return;
-        }
-        const video = document.createElement("video");
-        video.controls = true;
-        video.preload = "metadata";
-        video.src = src;
-        video.setAttribute("playsinline", "");
-        card.appendChild(video);
-      } else {
-        const img = document.createElement("img");
-        img.src = hit.webformatURL;
-        img.alt = hit.tags || "Pixabay photo";
-        img.loading = "lazy";
-        const width = hit.webformatWidth || hit.imageWidth;
-        const height = hit.webformatHeight || hit.imageHeight;
-        if (width && height) {
-          img.style.aspectRatio = width + " / " + height;
-        }
-        card.appendChild(img);
+      if (asPhoto) {
+        appendPhoto(card, hit);
+      } else if (!appendVideo(card, hit)) {
+        return;
       }
 
       const meta = document.createElement("div");
@@ -149,6 +199,56 @@
     });
   }
 
+  async function requestPixabay(endpoint, params) {
+    const apiKey = getApiKey();
+    const query = new URLSearchParams({
+      key: apiKey,
+      ...params,
+      per_page: "6",
+    });
+    const response = await fetch(endpoint + "?" + query.toString());
+    if (!response.ok) {
+      const detail = await response.text();
+      throw new Error(
+        detail.trim() || "Request failed with status " + response.status + "."
+      );
+    }
+    return response.json();
+  }
+
+  async function loadSixHits(endpoint, params) {
+    const attempts = [{ ...params, per_page: "6" }];
+
+    if (params.editors_choice) {
+      const withoutEditors = { ...params, per_page: "6" };
+      delete withoutEditors.editors_choice;
+      attempts.push(withoutEditors);
+    }
+
+    if (params.category) {
+      const looser = { ...params, per_page: "6" };
+      delete looser.editors_choice;
+      delete looser.category;
+      attempts.push(looser);
+    }
+
+    let best = { hits: [], totalHits: 0 };
+    for (let i = 0; i < attempts.length; i += 1) {
+      const data = await requestPixabay(endpoint, attempts[i]);
+      if (data.hits && data.hits.length > best.hits.length) {
+        best = data;
+      }
+      if (best.hits.length >= 6) {
+        break;
+      }
+    }
+
+    if (best.hits.length > 6) {
+      best.hits = best.hits.slice(0, 6);
+    }
+    return best;
+  }
+
   async function searchPixabay(endpoint, params, kind, label) {
     const apiKey = getApiKey();
     if (!apiKey) {
@@ -161,26 +261,13 @@
       return;
     }
 
-    const query = new URLSearchParams({ key: apiKey, ...params });
-    const url = endpoint + "?" + query.toString();
-
     setStatus("Loading " + (label || "results") + "…", "loading");
     resultsEl.innerHTML = "";
 
     try {
-      const response = await fetch(url);
+      const data = await loadSixHits(endpoint, params);
 
-      if (!response.ok) {
-        const detail = await response.text();
-        throw new Error(
-          detail.trim() ||
-            "Request failed with status " + response.status + "."
-        );
-      }
-
-      const data = await response.json();
-
-      if (!data.hits || data.totalHits === 0) {
+      if (!data.hits || data.totalHits === 0 || data.hits.length === 0) {
         setStatus("No results found. Try a different search.", "error");
         return;
       }
@@ -211,14 +298,14 @@
     if (mediaType === "video") {
       searchPixabay(
         VIDEO_ENDPOINT,
-        { q: term, per_page: "12" },
+        { q: term, per_page: "6" },
         "video",
         term
       );
     } else {
       searchPixabay(
         IMAGE_ENDPOINT,
-        { q: term, image_type: "photo", per_page: "12" },
+        { q: term, image_type: "photo", per_page: "6" },
         "photo",
         term
       );
