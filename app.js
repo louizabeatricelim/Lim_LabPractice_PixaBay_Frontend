@@ -62,6 +62,49 @@
   const challengeButtons = document.querySelectorAll("[data-challenge]");
   const searchButton = form.querySelector('button[type="submit"]');
 
+  function selectedKind() {
+    return mediaTypeSelect.value === "video" ? "video" : "photo";
+  }
+
+  function challengeQuery(challenge) {
+    const kind = selectedKind();
+    const base = challenge.params;
+
+    if (kind === "photo") {
+      const params = {
+        q: base.q,
+        image_type: "photo",
+        per_page: base.per_page || "6",
+      };
+      if (base.category) {
+        params.category =
+          base.category === "background" ? "nature" : base.category;
+      }
+      if (base.editors_choice) {
+        params.editors_choice = base.editors_choice;
+      }
+      if (base.order) {
+        params.order = base.order;
+      }
+      return { endpoint: IMAGE_ENDPOINT, params: params, kind: "photo" };
+    }
+
+    const params = {
+      q: base.q,
+      per_page: base.per_page || "6",
+    };
+    if (base.category) {
+      params.category = base.category;
+    }
+    if (base.editors_choice) {
+      params.editors_choice = base.editors_choice;
+    }
+    if (base.order) {
+      params.order = base.order;
+    }
+    return { endpoint: VIDEO_ENDPOINT, params: params, kind: "video" };
+  }
+
   function applyView(view) {
     resultsEl.dataset.view = view || "gallery";
   }
@@ -316,11 +359,11 @@
       if (!challenge) {
         return;
       }
-      mediaTypeSelect.value = challenge.kind;
+      const request = challengeQuery(challenge);
       searchPixabay(
-        challenge.endpoint,
-        challenge.params,
-        challenge.kind,
+        request.endpoint,
+        request.params,
+        request.kind,
         challenge.label
       );
     });
