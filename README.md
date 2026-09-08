@@ -1,46 +1,55 @@
 # Pixabay Challenge Viewer
 
-A single-page frontend that searches the [Pixabay API](https://pixabay.com/api/docs/) for **photos** or **videos**, and runs four lab challenges: **Rocket Launch**, **Basketball**, **Forest**, and **Road Forest**.
-
-Choose **Type** (Photo or Video) for the search bar, then search. The four challenge buttons always use their own fixed Pixabay parameters and show results on this same page.
+A single-page site (plain HTML, CSS, and JavaScript) that searches the [Pixabay API](https://pixabay.com/api/docs/) for photos or videos. Visitors can type any search term and choose Photo or Video, or click one of four lab challenges: **Rocket Launch**, **Basketball**, **Forest**, and **Road Forest**. Results load on the same page, with a loading state and an error message if a request fails.
 
 ## Prerequisites
 
-- A modern browser (Chrome, Edge, or Firefox).
-- A **Pixabay API key**. Create a free Pixabay account, then copy your key from the [Pixabay API docs](https://pixabay.com/api/docs/) (you must be logged in to see it).
+- A modern browser
+- A Pixabay API key from the [Pixabay API docs](https://pixabay.com/api/docs/) (log in to see it)
 
 **API key note:** keep the key in `config.js` on your computer. Do not commit or push `config.js` to GitHub. `.gitignore` lists that file so Git skips it. Use `config.sample.js` as the template.
 
 ## How to run locally
 
-1. Copy the sample config:
+1. Copy the sample file:
 
    ```powershell
    Copy-Item config.sample.js config.js
    ```
 
-2. Open `config.js` and replace `YOUR_PIXABAY_API_KEY_HERE` with your Pixabay key:
+2. Open `config.js` and replace the placeholder with your key:
 
    ```js
-   window.PIXABAY_API_KEY = "your_real_key_here";
+   window.PIXABAY_API_KEY = "YOUR_PIXABAY_API_KEY_HERE";
    ```
 
-3. Open `index.html` in a browser (double-click it, or use Live Server).
+3. Open `index.html` in a browser.
 
-Search should return six photos or videos. If you see “Missing API key”, `config.js` is missing or still has the placeholder.
+`config.js` stays on your machine only. GitHub should list `config.sample.js`, not `config.js`.
 
-## If `config.js` was already pushed to GitHub
+## Host on Netlify (auto-deploy from GitHub)
 
-1. Make sure `.gitignore` contains `config.js`.
-2. Remove it from Git **without deleting your local copy**:
+GitHub Pages cannot be used for this lab. Netlify can inject the key at build time.
 
-   ```powershell
-   git rm --cached config.js
-   git add .gitignore README.md
-   git commit -m "Stop tracking config.js and keep the API key local"
-   git push
-   ```
+1. Push this repo to GitHub (without `config.js`).
+2. On [Netlify](https://app.netlify.com/), **Add new site → Import an existing project → GitHub**, then choose `Lim_LabPractice_PixaBay_Frontend`.
+3. Build settings:
+   - **Build command:** `printf 'window.PIXABAY_API_KEY = "%s";\n' "$PIXABAY_API_KEY" > config.js`
+   - **Publish directory:** `.`
+4. **Site configuration → Environment variables → Add a variable**
+   - Key: `PIXABAY_API_KEY`
+   - Value: your Pixabay key
+5. Deploy. Netlify rebuilds on every push to `main`.
 
-3. The file disappears from the **latest** commit, but older commits can still contain the key. **Rotate the key** on Pixabay (generate a new one), put the new key only in local `config.js`, and use the new key on Netlify if you deploy.
+The same build command is in `netlify.toml`.
 
-For live hosting, upload the folder (including local `config.js`) with [Netlify Drop](https://app.netlify.com/drop). Do not put the key in the GitHub repo.
+After the site is live, treat the key as compromised: generate a **new** Pixabay key, update the Netlify variable, and stop using the old key.
+
+## Project files on GitHub
+
+| File | Include on GitHub? |
+| --- | --- |
+| `index.html`, `styles.css`, `app.js` | Yes |
+| `config.sample.js` | Yes (placeholder only) |
+| `README.md`, `.gitignore`, `netlify.toml` | Yes |
+| `config.js` | **No** |
