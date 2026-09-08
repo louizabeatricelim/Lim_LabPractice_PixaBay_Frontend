@@ -316,6 +316,7 @@
       if (!challenge) {
         return;
       }
+      mediaTypeSelect.value = challenge.kind;
       searchPixabay(
         challenge.endpoint,
         challenge.params,
