@@ -59,36 +59,28 @@
   const viewModeSelect = document.getElementById("view-mode");
   const statusEl = document.getElementById("status");
   const resultsEl = document.getElementById("results");
-  const challengesEl = document.getElementById("challenges");
   const challengeButtons = document.querySelectorAll("[data-challenge]");
-
-  function currentKind() {
-    return mediaTypeSelect.value === "video" ? "video" : "photo";
-  }
+  const searchButton = form.querySelector('button[type="submit"]');
 
   function applyView(view) {
     resultsEl.dataset.view = view || "gallery";
   }
 
-  function applyCategory(kind) {
-    challengesEl.dataset.kind = kind;
-    if (resultsEl.dataset.kind && resultsEl.dataset.kind !== kind) {
-      resultsEl.innerHTML = "";
-      delete resultsEl.dataset.kind;
-      setStatus("Showing " + kind + " challenges only. Search or pick a challenge.");
-    }
-  }
-
   applyView(viewModeSelect.value);
-  applyCategory(currentKind());
 
   viewModeSelect.addEventListener("change", function () {
     applyView(viewModeSelect.value);
   });
 
-  mediaTypeSelect.addEventListener("change", function () {
-    applyCategory(currentKind());
-  });
+  function setBusy(isBusy) {
+    searchInput.disabled = isBusy;
+    mediaTypeSelect.disabled = isBusy;
+    searchButton.disabled = isBusy;
+    challengeButtons.forEach(function (button) {
+      button.disabled = isBusy;
+    });
+    resultsEl.setAttribute("aria-busy", isBusy ? "true" : "false");
+  }
 
   function getApiKey() {
     const key = window.PIXABAY_API_KEY;
@@ -225,53 +217,22 @@
 
   async function requestPixabay(endpoint, params) {
     const apiKey = getApiKey();
-    const query = new URLSearchParams({
-      key: apiKey,
-      ...params,
-      per_page: "6",
-    });
+    const query = new URLSearchParams({ key: apiKey, ...params });
     const response = await fetch(endpoint + "?" + query.toString());
+
     if (!response.ok) {
       const detail = await response.text();
       throw new Error(
-        detail.trim() || "Request failed with status " + response.status + "."
+        detail.trim() ||
+          "Request failed with status " + response.status + "."
       );
     }
-    return response.json();
-  }
 
-  async function loadSixHits(endpoint, params, kind) {
-    const attempts = [{ ...params, per_page: "6" }];
-
-    if (params.editors_choice) {
-      const withoutEditors = { ...params, per_page: "6" };
-      delete withoutEditors.editors_choice;
-      attempts.push(withoutEditors);
+    try {
+      return await response.json();
+    } catch (parseError) {
+      throw new Error("Invalid response from Pixabay. Please try again.");
     }
-
-    if (params.category) {
-      const looser = { ...params, per_page: "6" };
-      delete looser.editors_choice;
-      delete looser.category;
-      attempts.push(looser);
-    }
-
-    let best = { hits: [], totalHits: 0 };
-    for (let i = 0; i < attempts.length; i += 1) {
-      const data = await requestPixabay(endpoint, attempts[i]);
-      const hits = filterHits(data.hits, kind);
-      if (hits.length > best.hits.length) {
-        best = { hits: hits, totalHits: data.totalHits };
-      }
-      if (best.hits.length >= 6) {
-        break;
-      }
-    }
-
-    if (best.hits.length > 6) {
-      best.hits = best.hits.slice(0, 6);
-    }
-    return best;
   }
 
   async function searchPixabay(endpoint, params, kind, label) {
@@ -286,29 +247,39 @@
       return;
     }
 
+    setBusy(true);
     setStatus("Loading " + (label || "results") + "…", "loading");
     resultsEl.innerHTML = "";
 
     try {
-      const data = await loadSixHits(endpoint, params, kind);
+      const data = await requestPixabay(endpoint, params);
+      const hits = filterHits(data.hits, kind);
 
-      if (!data.hits || data.hits.length === 0) {
-        setStatus("No " + kind + " results found. Try a different search.", "error");
+      if (!hits.length) {
+        setStatus(
+          "No " +
+            (kind === "video" ? "videos" : "photos") +
+            " found. Try a different search.",
+          "error"
+        );
         return;
       }
 
       const noun = kind === "video" ? "videos" : "photos";
-      renderResults(data.hits, kind);
+      renderResults(hits, kind);
       setStatus(
-        "Showing " + data.hits.length + " " + noun + " for “" + (label || params.q) + "”."
+        "Showing " + hits.length + " " + noun + " for “" + (label || params.q) + "”."
       );
     } catch (error) {
+      const raw = error && error.message ? error.message : "";
       const message =
-        error && error.message
-          ? error.message
-          : "Network error. Check your connection and try again.";
+        !raw || raw === "Failed to fetch"
+          ? "Network error. Check your connection and try again."
+          : raw;
       setStatus(message, "error");
       resultsEl.innerHTML = "";
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -342,7 +313,7 @@
     button.addEventListener("click", function () {
       const id = button.getAttribute("data-challenge");
       const challenge = CHALLENGES[id];
-      if (!challenge || challenge.kind !== currentKind()) {
+      if (!challenge) {
         return;
       }
       searchPixabay(

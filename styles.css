@@ -148,8 +148,10 @@ body {
   transform: translateY(-1px);
 }
 
-.btn:active {
-  transform: translateY(0);
+.btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+  transform: none;
 }
 
 .btn-primary {
@@ -180,11 +182,6 @@ body {
   background: #2b3040;
 }
 
-.challenges[data-kind="photo"] .btn-challenge[data-kind="video"],
-.challenges[data-kind="video"] .btn-challenge[data-kind="photo"] {
-  display: none;
-}
-
 .status {
   min-height: 1.5rem;
   margin: 0 0 1rem;
@@ -198,6 +195,25 @@ body {
 
 .status.is-loading {
   color: #c5cbe0;
+}
+
+.status.is-loading::before {
+  content: "";
+  display: inline-block;
+  width: 0.85rem;
+  height: 0.85rem;
+  margin-right: 0.5rem;
+  border: 2px solid #6f778a;
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  vertical-align: -0.15rem;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .results {

@@ -2,7 +2,7 @@
 
 A single-page frontend that searches the [Pixabay API](https://pixabay.com/api/docs/) for **photos** or **videos**, and runs four lab challenges: **Rocket Launch**, **Basketball**, **Forest**, and **Road Forest**.
 
-Choose a category (Photo or Video), pick a result view, then search or click a challenge button.
+Choose **Type** (Photo or Video) for the search bar, then search. The four challenge buttons always use their own fixed Pixabay parameters and show results on this same page.
 
 ## Prerequisites
 
