@@ -11,7 +11,7 @@
         q: "Rocket Launch",
         category: "science",
         editors_choice: "true",
-        per_page: "3",
+        per_page: "6",
       },
       kind: "video",
       label: "Rocket Launch",
@@ -22,7 +22,7 @@
         q: "Basketball",
         category: "sports",
         order: "latest",
-        per_page: "3",
+        per_page: "6",
       },
       kind: "video",
       label: "Basketball",
@@ -34,7 +34,7 @@
         category: "background",
         editors_choice: "true",
         order: "latest",
-        per_page: "3",
+        per_page: "6",
       },
       kind: "video",
       label: "Forest",
@@ -46,7 +46,7 @@
         image_type: "photo",
         category: "nature",
         editors_choice: "true",
-        per_page: "3",
+        per_page: "6",
       },
       kind: "photo",
       label: "Road Forest",
@@ -56,9 +56,20 @@
   const form = document.getElementById("search-form");
   const searchInput = document.getElementById("search-term");
   const mediaTypeSelect = document.getElementById("media-type");
+  const viewModeSelect = document.getElementById("view-mode");
   const statusEl = document.getElementById("status");
   const resultsEl = document.getElementById("results");
   const challengeButtons = document.querySelectorAll("[data-challenge]");
+
+  function applyView(view) {
+    resultsEl.dataset.view = view || "gallery";
+  }
+
+  applyView(viewModeSelect.value);
+
+  viewModeSelect.addEventListener("change", function () {
+    applyView(viewModeSelect.value);
+  });
 
   function getApiKey() {
     const key = window.PIXABAY_API_KEY;
@@ -94,10 +105,11 @@
 
   function renderResults(hits, kind) {
     resultsEl.innerHTML = "";
+    resultsEl.dataset.kind = kind;
 
     hits.forEach(function (hit) {
       const card = document.createElement("article");
-      card.className = "result-card";
+      card.className = "result-card is-" + (kind === "video" ? "video" : "photo");
 
       if (kind === "video") {
         const src = videoSrc(hit);
@@ -115,6 +127,11 @@
         img.src = hit.webformatURL;
         img.alt = hit.tags || "Pixabay photo";
         img.loading = "lazy";
+        const width = hit.webformatWidth || hit.imageWidth;
+        const height = hit.webformatHeight || hit.imageHeight;
+        if (width && height) {
+          img.style.aspectRatio = width + " / " + height;
+        }
         card.appendChild(img);
       }
 
@@ -140,6 +157,7 @@
         "error"
       );
       resultsEl.innerHTML = "";
+      delete resultsEl.dataset.kind;
       return;
     }
 

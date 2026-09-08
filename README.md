@@ -80,13 +80,78 @@ Use SSH (`git@github.com:...`), not HTTPS.
 
 ## Host live on Netlify (free)
 
-This lab uses [Netlify Drop](https://app.netlify.com/drop) for free static hosting:
+This is a static site (`index.html`, `styles.css`, `app.js`). No Node build is required. Use **Netlify Drop** for class: it uploads your local folder, including `config.js`, which Git never commits.
 
-1. Keep a local copy of `config.js` with your real key (still never push that file to GitHub).
-2. Drag the whole project folder (including `config.js`) onto Netlify Drop.
-3. Netlify gives you a public URL. Open it and test search plus each challenge button.
+### Before you deploy
 
-Because the key ships with the deployed files, remember the tradeoff above.
+1. Copy the sample config if you have not already:
+
+   ```powershell
+   Copy-Item config.sample.js config.js
+   ```
+
+2. Open `config.js` and paste your real Pixabay key:
+
+   ```js
+   window.PIXABAY_API_KEY = "paste_your_key_here";
+   ```
+
+3. Confirm these files are in the project folder:
+
+   - `index.html`
+   - `styles.css`
+   - `app.js`
+   - `config.js` (must be present on Netlify or search will fail)
+
+Do **not** push `config.js` to GitHub. Deploy it only through Netlify.
+
+### Method A — Netlify Drop (recommended)
+
+1. Create a free account at [Netlify](https://www.netlify.com/) (Sign up with GitHub, email, or Google).
+2. Open [Netlify Drop](https://app.netlify.com/drop).
+3. Drag the **whole project folder** onto the drop zone. Include `config.js`. You can also zip the folder and drop the zip.
+4. Wait until Netlify finishes uploading. It shows a live URL such as `https://random-name-123456.netlify.app`.
+5. Open that URL. Search for a photo or video, switch the result view, and click each challenge button.
+
+If search says the API key is missing, `config.js` was not in the upload. Add the file locally and drag the folder onto Drop again (or use **Deploys → Deploy manually** on the site).
+
+### Optional: rename the site URL
+
+1. In Netlify, open the site → **Domain management** (or **Site configuration → Domain management**).
+2. Choose **Options → Edit site name**.
+3. Pick a unique name, for example `familyname-pixabay-viewer`.
+4. The public URL becomes `https://your-site-name.netlify.app`.
+
+### Method B — Connect a GitHub repo (optional)
+
+Use this if you want Netlify to redeploy whenever you push to GitHub.
+
+`config.js` is gitignored, so a plain Git deploy will **not** include your key. Generate it at build time from a Netlify environment variable:
+
+1. Push the project to GitHub **without** `config.js`.
+2. In Netlify: **Add new site → Import an existing project → GitHub**. Authorize Netlify and pick the repo.
+3. Build settings:
+   - **Build command:** `echo window.PIXABAY_API_KEY="%PIXABAY_API_KEY%"; > config.js`  
+     On Netlify’s Linux builders use:
+
+     ```bash
+     printf 'window.PIXABAY_API_KEY = "%s";\n' "$PIXABAY_API_KEY" > config.js
+     ```
+   - **Publish directory:** `.` (leave empty / site root)
+4. **Site configuration → Environment variables → Add a variable**
+   - Key: `PIXABAY_API_KEY`
+   - Value: your Pixabay key
+5. Deploy. Confirm search and the challenge buttons work on the live URL.
+
+### Quick checks after deploy
+
+- The homepage title **Pixabay Challenge Viewer** loads.
+- Search returns photos or videos.
+- The six result views (Spotlight, Pair, Gallery, Quad, Mosaic, Filmstrip) change the layout.
+- Rocket Launch, Basketball, Forest, and Road Forest each return six results.
+- If the status line says the key is missing, `config.js` was not generated or not uploaded.
+
+Because the key is in the public site (Drop) or injected at build time (Git), treat it as semi-public. See **API key tradeoff** above.
 
 ## Challenge presets
 

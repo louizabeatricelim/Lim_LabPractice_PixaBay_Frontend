@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Syne:wght@600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;1,14..32,400&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
@@ -39,6 +39,16 @@
           <option value="video">Video</option>
         </select>
 
+        <label class="sr-only" for="view-mode">Result view</label>
+        <select id="view-mode" name="viewMode" aria-label="Result view">
+          <option value="spotlight">Spotlight</option>
+          <option value="pair">Pair</option>
+          <option value="gallery" selected>Gallery</option>
+          <option value="quad">Quad</option>
+          <option value="mosaic">Mosaic</option>
+          <option value="filmstrip">Filmstrip</option>
+        </select>
+
         <button type="submit" class="btn btn-primary">Search</button>
       </form>
 
@@ -67,7 +77,7 @@
 
       <p class="status" id="status" role="status" aria-live="polite"></p>
 
-      <section class="results" id="results" aria-label="Search results"></section>
+      <section class="results" id="results" data-view="gallery" aria-label="Search results"></section>
 
       <p class="attribution">
         Images and videos from
