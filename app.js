@@ -128,27 +128,24 @@
     return false;
   }
 
+  function appendBadge(frame, label) {
+    const badge = document.createElement("span");
+    badge.className = "media-badge";
+    badge.textContent = label;
+    frame.appendChild(badge);
+  }
+
   function appendPhoto(card, hit) {
     const frame = document.createElement("div");
-    frame.className = "photo-frame";
+    frame.className = "media-frame";
 
     const img = document.createElement("img");
     img.src = photoSrc(hit);
     img.alt = hit.tags || "Pixabay photo";
     img.loading = "lazy";
     img.decoding = "async";
-    const width = hit.webformatWidth || hit.imageWidth;
-    const height = hit.webformatHeight || hit.imageHeight;
-    if (width && height) {
-      img.style.aspectRatio = width + " / " + height;
-    }
     frame.appendChild(img);
-
-    const badge = document.createElement("span");
-    badge.className = "media-badge";
-    badge.textContent = "Photo";
-    frame.appendChild(badge);
-
+    appendBadge(frame, "Photo");
     card.appendChild(frame);
   }
 
@@ -157,6 +154,10 @@
     if (!src) {
       return false;
     }
+
+    const frame = document.createElement("div");
+    frame.className = "media-frame";
+
     const video = document.createElement("video");
     video.controls = true;
     video.preload = "metadata";
@@ -166,7 +167,9 @@
     if (poster) {
       video.poster = poster;
     }
-    card.appendChild(video);
+    frame.appendChild(video);
+    appendBadge(frame, "Video");
+    card.appendChild(frame);
     return true;
   }
 
