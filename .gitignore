@@ -1,2 +1,5 @@
 # Ignore live configuration files containing secrets
 config.js
+
+# Do NOT ignore the sample file (so other developers can see the template)
+!config.js.sample
