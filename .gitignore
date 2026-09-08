@@ -1,0 +1,2 @@
+# Ignore live configuration files containing secrets
+config.js
