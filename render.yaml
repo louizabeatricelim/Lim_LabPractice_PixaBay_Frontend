@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: lim-pixabay-frontend
+    runtime: static
+    buildCommand: printf 'window.PIXABAY_API_KEY = "%s";\n' "$PIXABAY_API_KEY" > config.js
+    staticPublishPath: .
+    envVars:
+      - key: SKIP_INSTALL_DEPS
+        value: "true"
+      - key: PIXABAY_API_KEY
+        sync: false

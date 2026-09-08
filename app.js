@@ -6,49 +6,28 @@
 
   const CHALLENGES = {
     rocket: {
-      endpoint: VIDEO_ENDPOINT,
-      params: {
-        q: "Rocket Launch",
-        category: "science",
-        editors_choice: "true",
-        per_page: "6",
-      },
-      kind: "video",
+      q: "Rocket Launch",
+      category: "science",
+      editors_choice: "true",
       label: "Rocket Launch",
     },
     basketball: {
-      endpoint: VIDEO_ENDPOINT,
-      params: {
-        q: "Basketball",
-        category: "sports",
-        order: "latest",
-        per_page: "6",
-      },
-      kind: "video",
+      q: "Basketball",
+      category: "sports",
+      order: "latest",
       label: "Basketball",
     },
     forest: {
-      endpoint: VIDEO_ENDPOINT,
-      params: {
-        q: "Forest",
-        category: "background",
-        editors_choice: "true",
-        order: "latest",
-        per_page: "6",
-      },
-      kind: "video",
+      q: "Forest",
+      category: "nature",
+      editors_choice: "true",
+      order: "latest",
       label: "Forest",
     },
     roadForest: {
-      endpoint: IMAGE_ENDPOINT,
-      params: {
-        q: "Road Forest",
-        image_type: "photo",
-        category: "nature",
-        editors_choice: "true",
-        per_page: "6",
-      },
-      kind: "photo",
+      q: "Road Forest",
+      category: "nature",
+      editors_choice: "true",
       label: "Road Forest",
     },
   };
@@ -68,39 +47,22 @@
 
   function challengeQuery(challenge) {
     const kind = selectedKind();
-    const base = challenge.params;
-
-    if (kind === "photo") {
-      const params = {
-        q: base.q,
-        image_type: "photo",
-        per_page: base.per_page || "6",
-      };
-      if (base.category) {
-        params.category =
-          base.category === "background" ? "nature" : base.category;
-      }
-      if (base.editors_choice) {
-        params.editors_choice = base.editors_choice;
-      }
-      if (base.order) {
-        params.order = base.order;
-      }
-      return { endpoint: IMAGE_ENDPOINT, params: params, kind: "photo" };
-    }
-
     const params = {
-      q: base.q,
-      per_page: base.per_page || "6",
+      q: challenge.q,
+      per_page: "6",
     };
-    if (base.category) {
-      params.category = base.category;
+    if (challenge.category) {
+      params.category = challenge.category;
     }
-    if (base.editors_choice) {
-      params.editors_choice = base.editors_choice;
+    if (challenge.editors_choice) {
+      params.editors_choice = challenge.editors_choice;
     }
-    if (base.order) {
-      params.order = base.order;
+    if (challenge.order) {
+      params.order = challenge.order;
+    }
+    if (kind === "photo") {
+      params.image_type = "photo";
+      return { endpoint: IMAGE_ENDPOINT, params: params, kind: "photo" };
     }
     return { endpoint: VIDEO_ENDPOINT, params: params, kind: "video" };
   }
@@ -185,13 +147,6 @@
     });
   }
 
-  function appendBadge(frame, label) {
-    const badge = document.createElement("span");
-    badge.className = "media-badge";
-    badge.textContent = label;
-    frame.appendChild(badge);
-  }
-
   function appendPhoto(card, hit) {
     const frame = document.createElement("div");
     frame.className = "media-frame";
@@ -202,7 +157,6 @@
     img.loading = "lazy";
     img.decoding = "async";
     frame.appendChild(img);
-    appendBadge(frame, "Photo");
     card.appendChild(frame);
   }
 
@@ -225,7 +179,6 @@
       video.poster = poster;
     }
     frame.appendChild(video);
-    appendBadge(frame, "Video");
     card.appendChild(frame);
     return true;
   }

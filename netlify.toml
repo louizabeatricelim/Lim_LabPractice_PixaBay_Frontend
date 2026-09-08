@@ -1,3 +1,0 @@
-[build]
-  command = "printf 'window.PIXABAY_API_KEY = \"%s\";\\n' \"$PIXABAY_API_KEY\" > config.js"
-  publish = "."

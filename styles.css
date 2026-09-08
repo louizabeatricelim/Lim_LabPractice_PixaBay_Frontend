@@ -287,21 +287,6 @@ body {
   border: 0;
 }
 
-.media-badge {
-  position: absolute;
-  top: 0.55rem;
-  left: 0.55rem;
-  z-index: 1;
-  padding: 0.15rem 0.45rem;
-  border-radius: 999px;
-  background: rgba(20, 22, 28, 0.78);
-  color: #f3f1ea;
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
 .result-meta {
   padding: 0.7rem 0.85rem;
   font-size: 0.85rem;
