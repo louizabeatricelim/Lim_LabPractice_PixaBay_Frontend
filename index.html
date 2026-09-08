@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;1,14..32,400&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=7" />
+    <link rel="stylesheet" href="styles.css?v=8" />
   </head>
   <body>
     <main class="app">
@@ -33,13 +33,13 @@
           required
         />
 
-        <label class="sr-only" for="media-type">Media type</label>
+        <label class="field-label" for="media-type">Category</label>
         <select id="media-type" name="mediaType" aria-label="Photo or Video">
           <option value="photo">Photo</option>
           <option value="video">Video</option>
         </select>
 
-        <label class="sr-only" for="view-mode">Result view</label>
+        <label class="field-label" for="view-mode">View</label>
         <select id="view-mode" name="viewMode" aria-label="Result view">
           <option value="spotlight">Spotlight</option>
           <option value="pair">Pair</option>
@@ -52,24 +52,36 @@
         <button type="submit" class="btn btn-primary">Search</button>
       </form>
 
-      <section class="challenges" aria-label="Lab challenges">
-        <button type="button" class="btn btn-challenge" data-challenge="rocket">
+      <section class="challenges" id="challenges" data-kind="photo" aria-label="Lab challenges">
+        <button
+          type="button"
+          class="btn btn-challenge"
+          data-challenge="rocket"
+          data-kind="video"
+        >
           Rocket Launch
         </button>
         <button
           type="button"
           class="btn btn-challenge"
           data-challenge="basketball"
+          data-kind="video"
         >
           Basketball
         </button>
-        <button type="button" class="btn btn-challenge" data-challenge="forest">
+        <button
+          type="button"
+          class="btn btn-challenge"
+          data-challenge="forest"
+          data-kind="video"
+        >
           Forest
         </button>
         <button
           type="button"
           class="btn btn-challenge"
           data-challenge="roadForest"
+          data-kind="photo"
         >
           Road Forest
         </button>
@@ -87,7 +99,7 @@
       </p>
     </main>
 
-    <script src="config.js?v=7"></script>
-    <script src="app.js?v=7"></script>
+    <script src="config.js?v=8"></script>
+    <script src="app.js?v=8"></script>
   </body>
 </html>

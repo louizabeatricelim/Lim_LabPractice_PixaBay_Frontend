@@ -59,16 +59,35 @@
   const viewModeSelect = document.getElementById("view-mode");
   const statusEl = document.getElementById("status");
   const resultsEl = document.getElementById("results");
+  const challengesEl = document.getElementById("challenges");
   const challengeButtons = document.querySelectorAll("[data-challenge]");
+
+  function currentKind() {
+    return mediaTypeSelect.value === "video" ? "video" : "photo";
+  }
 
   function applyView(view) {
     resultsEl.dataset.view = view || "gallery";
   }
 
+  function applyCategory(kind) {
+    challengesEl.dataset.kind = kind;
+    if (resultsEl.dataset.kind && resultsEl.dataset.kind !== kind) {
+      resultsEl.innerHTML = "";
+      delete resultsEl.dataset.kind;
+      setStatus("Showing " + kind + " challenges only. Search or pick a challenge.");
+    }
+  }
+
   applyView(viewModeSelect.value);
+  applyCategory(currentKind());
 
   viewModeSelect.addEventListener("change", function () {
     applyView(viewModeSelect.value);
+  });
+
+  mediaTypeSelect.addEventListener("change", function () {
+    applyCategory(currentKind());
   });
 
   function getApiKey() {
@@ -118,14 +137,17 @@
     return hit.userImageURL || "";
   }
 
-  function isPhotoHit(hit, kind) {
-    if (photoSrc(hit) && !videoSrc(hit)) {
-      return true;
+  function matchesKind(hit, kind) {
+    if (kind === "photo") {
+      return Boolean(photoSrc(hit) && !videoSrc(hit));
     }
-    if (kind === "photo" && photoSrc(hit)) {
-      return true;
-    }
-    return false;
+    return Boolean(videoSrc(hit));
+  }
+
+  function filterHits(hits, kind) {
+    return (hits || []).filter(function (hit) {
+      return matchesKind(hit, kind);
+    });
   }
 
   function appendBadge(frame, label) {
@@ -177,12 +199,11 @@
     resultsEl.innerHTML = "";
     resultsEl.dataset.kind = kind === "video" ? "video" : "photo";
 
-    hits.forEach(function (hit) {
-      const asPhoto = isPhotoHit(hit, kind);
+    filterHits(hits, kind).forEach(function (hit) {
       const card = document.createElement("article");
-      card.className = "result-card is-" + (asPhoto ? "photo" : "video");
+      card.className = "result-card is-" + kind;
 
-      if (asPhoto) {
+      if (kind === "photo") {
         appendPhoto(card, hit);
       } else if (!appendVideo(card, hit)) {
         return;
@@ -219,7 +240,7 @@
     return response.json();
   }
 
-  async function loadSixHits(endpoint, params) {
+  async function loadSixHits(endpoint, params, kind) {
     const attempts = [{ ...params, per_page: "6" }];
 
     if (params.editors_choice) {
@@ -238,8 +259,9 @@
     let best = { hits: [], totalHits: 0 };
     for (let i = 0; i < attempts.length; i += 1) {
       const data = await requestPixabay(endpoint, attempts[i]);
-      if (data.hits && data.hits.length > best.hits.length) {
-        best = data;
+      const hits = filterHits(data.hits, kind);
+      if (hits.length > best.hits.length) {
+        best = { hits: hits, totalHits: data.totalHits };
       }
       if (best.hits.length >= 6) {
         break;
@@ -268,16 +290,17 @@
     resultsEl.innerHTML = "";
 
     try {
-      const data = await loadSixHits(endpoint, params);
+      const data = await loadSixHits(endpoint, params, kind);
 
-      if (!data.hits || data.totalHits === 0 || data.hits.length === 0) {
-        setStatus("No results found. Try a different search.", "error");
+      if (!data.hits || data.hits.length === 0) {
+        setStatus("No " + kind + " results found. Try a different search.", "error");
         return;
       }
 
+      const noun = kind === "video" ? "videos" : "photos";
       renderResults(data.hits, kind);
       setStatus(
-        "Showing " + data.hits.length + " result(s) for “" + (label || params.q) + "”."
+        "Showing " + data.hits.length + " " + noun + " for “" + (label || params.q) + "”."
       );
     } catch (error) {
       const message =
@@ -319,7 +342,7 @@
     button.addEventListener("click", function () {
       const id = button.getAttribute("data-challenge");
       const challenge = CHALLENGES[id];
-      if (!challenge) {
+      if (!challenge || challenge.kind !== currentKind()) {
         return;
       }
       searchPixabay(
